@@ -33,16 +33,6 @@ class Text:
         text_rect = text_surface.get_rect(center=(x,y))
         scr.blit(text_surface, text_rect)
 
-attack_interval = 5 #攻撃の間隔
-last_attack_time = 0 #攻撃時刻
-me_defense = 5 #防御力
-clock = pg.time.Clock()
-timer_event = USEREVENT + 1
-pg.time.set_timer(timer_event, 5000) #5秒ごとにイベント発生
-is_defending = False #防御フラグ
-is_mouse_pressed = False
-ene_img = pg.image.load("./ex05/fig/ene.png")
-
 class Button:
     """
     勇者の行動選択ボタンに関するクラス
@@ -82,7 +72,7 @@ class Button:
         text_rect = text_surface.get_rect(center=self.rect.center)      # テキストの中心値指定
         scr.blit(text_surface, text_rect)   # ボタン描画
 
-    def handle_event(self, event, scr, fight_img,win2):
+    def handle_event(self, event, scr, fight_img, win2):
         """
         勇者の行動の切り替えメソッド
         event: event
@@ -91,7 +81,7 @@ class Button:
         if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
             # マウスの座標がボタンの範囲内にあれば
             if self.rect.collidepoint(event.pos):
-                act = self.action(self.num, self.text2, self.hp_mp, scr, fight_img,win2)   # action関数を実行
+                act = self.action(self.num, self.text2, self.hp_mp, scr, fight_img, win2)   # action関数を実行
                 return act
             
 def calculate_damage(damage, defense): #ダメージ計算
@@ -122,7 +112,7 @@ class HP_MP:
         self.ene_hp = self.font.render(f"HP:{self.e_hp}", True, (255,255,255))
 
 
-def action(i, text:Text, hp_mp:HP_MP,screen,fight_img,win2):
+def action(i, text:Text, hp_mp:HP_MP, screen, fight_img, win2):
     """
     勇者の行動に関する関数
     i: index (0:攻撃, 1:防御, 2:魔法, 3:回復, 4:調教, 5:逃走)
@@ -136,11 +126,8 @@ def action(i, text:Text, hp_mp:HP_MP,screen,fight_img,win2):
     is_mouse_pressed = False
 
     if hp_mp.turn==1:    
-        if txt_origin[i]=="攻撃":
-            # 攻撃処理
-            # # 勇者の攻撃力
-                         # 攻撃ボタンが押されたら
-            ene_hp -= ATK       # スライムのHPを3減らす
+        if txt_origin[i]=="攻撃":   # 攻撃ボタンが押されたら
+            ene_hp -= ATK           # スライムのHPを減らす
             if ene_hp <= 0:         # スライムのHPが0以下になったら
                 ene_hp = 0          # スライムのHPを0にする
             text.text = f"{ATK}ダメージ与えた"
@@ -215,6 +202,14 @@ def action(i, text:Text, hp_mp:HP_MP,screen,fight_img,win2):
         time.sleep(3)
         sys.exit()
 
+    if txt_origin[i] == "逃走":
+        text.text = "勇者は逃げ出した"
+        screen.blit(win2,[50,50])
+        text.draw(screen, (255, 255, 255), WIDTH/2, 150)
+        pg.display.update()
+        time.sleep(3)
+        sys.exit()
+
     if hp_mp.turn==0:
         hp_mp.PL_action = txt_origin[i]
 
@@ -283,6 +278,10 @@ def main():
     text_surface = HP_MP(turn)
     # 勇者の行動選択ボタンを描画するsurfaceを作成しリストtxtに追加
 
+    
+    font3 = pg.font.SysFont(None, 200)
+    die_text = "You died" # 死亡メッセージ
+
     for i,tx in enumerate(txt_origin):
         # インスタンス化
         if i%2==0:
@@ -303,7 +302,7 @@ def main():
             if event.type == pg.QUIT: return    # ×ボタンが押されたらプログラム終了
 
             for button in txt:
-                button.handle_event(event, screen, fight_img,win2)
+                button.handle_event(event, screen, fight_img, win2)
 
                 #変更箇所
                 if  TAME == 1:
