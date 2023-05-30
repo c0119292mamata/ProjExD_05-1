@@ -3,6 +3,9 @@ import random
 import sys
 import pygame as pg
 import time
+from pygame.locals import *
+
+pg.init()
 
 # global変数
 WIDTH = 1600    # ウィンドウの横幅
@@ -81,6 +84,13 @@ class Button:
             if self.rect.collidepoint(event.pos):
                 act = self.action(self.num, self.text2, self.hp_mp, scr, fight_img)   # action関数を実行
                 return act
+            
+def calculate_damage(damage, defense): #ダメージ計算
+        
+        defense_diff = damage - defense
+        if defense_diff < 0:
+            defense_diff = 0
+        return defense_diff
         
 class HP_MP:
     def __init__(self,turn):
@@ -108,7 +118,7 @@ def action(i, text:Text, hp_mp:HP_MP,screen,fight_img):
     勇者の行動に関する関数
     i: index (0:攻撃, 1:防御, 2:魔法, 3:回復, 4:調教, 5:逃走)
     """
-    global HP, ENE_HP
+    global HP, ENE_HP, TAME
 
     p = ["攻撃","防御","魔法","回復","調教","逃走"]
     hp = int(hp_mp.hp)
@@ -161,7 +171,7 @@ def action(i, text:Text, hp_mp:HP_MP,screen,fight_img):
                 if hp>=HP:
                     hp=HP
                 hp_mp.PL(hp,mp)
-                text.text = f"{MJC}回復した"
+                text.text = f"{nokori}回復した"
                 hp_mp.turn = 0
             elif mp<1:
                 text.text = "MPが足りません"
@@ -169,6 +179,7 @@ def action(i, text:Text, hp_mp:HP_MP,screen,fight_img):
                 text.text = "体力が満タンです"
     if hp_mp.turn==0:
         hp_mp.PL_action = txt_origin[i]
+
 
 
 def ENE_action(PL_action,hp_mp:HP_MP,text:Text, screen, ene_img, attack_slime):
@@ -197,13 +208,12 @@ def ENE_action(PL_action,hp_mp:HP_MP,text:Text, screen, ene_img, attack_slime):
     text.text=f"{damege}ダメージくらった"
     hp_mp.turn=1
     
-    
+
         
 def main():
     """
     main関数
     """
-    global WIDTH, HIGHT, txt_origin, HP, ENE_HP    # global変数
     turn=1
     bg_image = "./ex05/fig/back.png"
     pg.display.set_caption("RPG of くそげー")   # ウィンドウの名前
@@ -219,7 +229,6 @@ def main():
     attack_slime = pg.image.load("./ex05/fig/momoka.png")
     attack_slime = pg.transform.scale(attack_slime, (300, 200))
     # 攻撃エフェクト
-    toka = 0    # 攻撃エフェクトの透過度
     fight_img = pg.image.load("./ex05/fig/fight_effect.png")
     fight_img = pg.transform.scale(fight_img,(WIDTH,HIGHT))
     # テキストボックス
@@ -228,6 +237,7 @@ def main():
     win2 = pg.transform.scale(win,(WIDTH-100,HIGHT/4))
     # フォント
     font1 = pg.font.SysFont("hg正楷書体pro", 100)
+    font2 = pg.font.SysFont("hg正楷書体pro", 50)
     # テキスト
     syo="野生のスライムが現れた"
     text = Text(syo)
@@ -235,6 +245,7 @@ def main():
     txt = []    # 選択ボタンを描画するsurfaceのリスト
     text_surface = HP_MP(turn)
     # 勇者の行動選択ボタンを描画するsurfaceを作成しリストtxtに追加
+
     for i,tx in enumerate(txt_origin):
         # インスタンス化
         if i%2==0:
@@ -253,6 +264,8 @@ def main():
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: return    # ×ボタンが押されたらプログラム終了
+            for button in txt:
+                button.handle_event(event,screen,fight_img)
 
             for button in txt:                  # 勇者の行動処理
                 button.handle_event(event,screen,fight_img)
@@ -273,10 +286,12 @@ def main():
             x += text_width
         for i in txt:
             i.draw(screen)  # ボタン描画
+
         screen.blit(text_surface.pl_hp,[100, 350])   # 勇者のHP,MP表示
         screen.blit(text_surface.ene_hp,[WIDTH/2-ene_rct.width/2+225, HIGHT/2-50])    # 敵スライムのHP表示
         pg.display.update()     # ディスプレイのアップデート
         clock.tick(100)         # 時間
+       
         
         if text_surface.turn==0:
             time.sleep(1)
@@ -289,6 +304,7 @@ def main():
             ENE_action(PL_action,text_surface,text,screen,ene_img,attack_slime)
             
         # スライムを倒したら、画面を3秒止めてプログラム終了
+
         if turn==2:
             pg.display.update()
             time.sleep(3)
