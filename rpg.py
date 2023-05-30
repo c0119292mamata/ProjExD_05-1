@@ -171,7 +171,7 @@ def action(i, text:Text, hp_mp:HP_MP,screen,fight_img):
                 if hp>=HP:
                     hp=HP
                 hp_mp.PL(hp,mp)
-                text.text = f"{nokori}回復した"
+                text.text = f"{MJC}回復した"
                 hp_mp.turn = 0
             elif mp<1:
                 text.text = "MPが足りません"
